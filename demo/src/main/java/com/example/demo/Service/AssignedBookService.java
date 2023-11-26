@@ -4,6 +4,10 @@ import com.example.demo.Model.AssignedBook;
 import com.example.demo.Model.Book;
 import com.example.demo.Model.Student;
 import com.example.demo.Repository.AssignedBookRepository;
+import com.example.demo.Repository.BookRepository;
+import com.example.demo.Repository.StudentRepository;
+import com.example.demo.Utility.BookStatus;
+import com.example.demo.Utility.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -14,6 +18,12 @@ import java.util.stream.Collectors;
 public class AssignedBookService {
     @Autowired
     AssignedBookRepository assignedBookRepository;
+
+    @Autowired
+    BookRepository bookRepository;
+
+    @Autowired
+    StudentRepository studentRepository;
 
 
     public List<AssignedBookDTO> getAllAssignedBooks() {
@@ -28,6 +38,7 @@ public class AssignedBookService {
 
     public AssignedBookDTO saveAssignedBook(AssignedBookDTO assignedBookDTO) {
         AssignedBook assignedBook = mapToEntity(assignedBookDTO);
+        assignedBook.getBook().setStatus(BookStatus.CHECKED_OUT);
         AssignedBook savedAssignedBook = assignedBookRepository.save(assignedBook);
         return mapToDTO(savedAssignedBook);
     }
@@ -79,4 +90,44 @@ public class AssignedBookService {
 
         return assignedBook;
     }
-}
+
+    public AssignedBookDTO checkoutBook(Integer bookId, String studentId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found with id: " + bookId));
+
+        if (book.getStatus() == BookStatus.AVAILABLE) {
+            AssignedBook assignedBook = new AssignedBook();
+            assignedBook.setBook(book);
+            assignedBook.setStudent((Student) studentRepository.findByStudentid(studentId)
+                    .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId)));
+            assignedBook.setDateborrow(DateUtil.getCurrentDate());  // You can replace this with actual date logic
+            assignedBook.setIsreturned(false);
+            assignedBook.setDatereturn("-");
+
+            book.setStatus(BookStatus.CHECKED_OUT);
+            bookRepository.save(book);
+            assignedBookRepository.save(assignedBook);
+
+            return mapToDTO(assignedBook);
+        } else {
+            throw new RuntimeException("Book is not available for checkout");
+        }
+    }
+
+    public void returnBook(int bookId) {
+        // Find the latest assigned book for the specified bookId
+        AssignedBook latestAssignedBook = assignedBookRepository.findFirstByBookIdAndIsreturnedOrderByDateborrowDesc(bookId, false)
+                .orElseThrow(() -> new RuntimeException("No assigned book found for the specified book"));
+
+        // Update book status to AVAILABLE
+        Book book = latestAssignedBook.getBook();
+        book.setStatus(BookStatus.AVAILABLE); // Assuming you have an enum for book status
+        bookRepository.save(book);
+
+        // Mark the assigned book as returned
+        latestAssignedBook.setIsreturned(true);
+        assignedBookRepository.save(latestAssignedBook);
+    }
+
+
+    }

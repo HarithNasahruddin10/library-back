@@ -1,13 +1,12 @@
 package com.example.demo.Model;
 
+import com.example.demo.Utility.BookStatus;
+import com.example.demo.Utility.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Data
 @NoArgsConstructor
@@ -21,7 +20,15 @@ public class Book {
     private String title;
     private String desc;
     private String author;
-    private String category;
+
+    @Enumerated(EnumType.STRING)
+    private Category category;
+
+    @Enumerated(EnumType.STRING)
+    private BookStatus status;
+
     private Integer yearpublish;
     private String bookimage;
+
+
 }

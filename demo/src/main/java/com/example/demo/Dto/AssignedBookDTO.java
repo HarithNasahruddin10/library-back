@@ -1,5 +1,6 @@
 package com.example.demo.Dto;
 
+import com.example.demo.Utility.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ public class AssignedBookDTO {
     private String bookTitle;
     private String bookDesc;
     private String bookAuthor;
-    private String bookCategory;
+    private Category bookCategory;
     private Integer bookYearPublish;
     private String bookImage;
 }
