@@ -61,6 +61,16 @@ public ResponseEntity<String> returnBook(@RequestParam int bookId) {
                 .body("Error returning book: " + e.getMessage());
     }
 }
+    @GetMapping("/checked-out/{bookId}")
+    public ResponseEntity<AssignedBookDTO> getAssignedBookDetails(@PathVariable Integer bookId) {
+        try {
+            AssignedBookDTO assignedBookDetails = assignedBookService.getAssignedBookDetails(bookId);
+            return ResponseEntity.ok(assignedBookDetails);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 
 }

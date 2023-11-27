@@ -64,8 +64,10 @@ public class AssignedBookService {
                 assignedBook.getBook().getDesc(),
                 assignedBook.getBook().getAuthor(),
                 assignedBook.getBook().getCategory(),
+                assignedBook.getBook().getStatus(),
                 assignedBook.getBook().getYearpublish(),
                 assignedBook.getBook().getBookimage()
+
         );
     }
 
@@ -129,5 +131,43 @@ public class AssignedBookService {
         assignedBookRepository.save(latestAssignedBook);
     }
 
+    public AssignedBookDTO getAssignedBookDetails(Integer bookId) {
+        Optional<AssignedBook> assignedBookOptional = assignedBookRepository.findFirstByBookIdAndIsreturnedOrderByDateborrowDesc(bookId, false);
+
+        if (assignedBookOptional.isPresent()) {
+            AssignedBook assignedBook = assignedBookOptional.get();
+            Book book = bookRepository.findById(assignedBook.getBook().getId())
+                    .orElseThrow(() -> new RuntimeException("Book not found with id: " + assignedBook.getBook().getId()));
+
+            Student student = studentRepository.findById(assignedBook.getStudent().getId())
+                    .orElseThrow(() -> new RuntimeException("Student not found with id: " + assignedBook.getStudent().getId()));
+
+            return mapToDTOWithDetails(assignedBook, book, student);
+        } else {
+            throw new RuntimeException("No assigned book found for the specified book");
+        }
+    }
+    private AssignedBookDTO mapToDTOWithDetails(AssignedBook assignedBook, Book book, Student student) {
+        return new AssignedBookDTO(
+                assignedBook.getId(),
+                assignedBook.getDateborrow(),
+                assignedBook.getDatereturn(),
+                assignedBook.getIsreturned(),
+                student.getId(),
+                student.getFirstname(),
+                student.getLastname(),
+                student.getStudentid(),
+                student.getEmail(),
+                student.getPhonenum(),
+                book.getId(),
+                book.getTitle(),
+                book.getDesc(),
+                book.getAuthor(),
+                book.getCategory(),
+                book.getStatus(),
+                book.getYearpublish(),
+                book.getBookimage()
+        );
+    }
 
     }
