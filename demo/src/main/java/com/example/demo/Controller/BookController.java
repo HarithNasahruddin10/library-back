@@ -1,10 +1,11 @@
+// BookController.java
 package com.example.demo.Controller;
 
 import com.example.demo.Dto.BookDto;
 import com.example.demo.Model.Book;
 import com.example.demo.Service.BookService;
+import com.example.demo.Util.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -12,82 +13,100 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/books")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class BookController {
-    @Autowired
-    BookService bookService;
-
-
 
     @Autowired
-    public BookController(BookService bookService) {
-        this.bookService = bookService;
-    }
+    private BookService bookService;
+
+    private static final String BOOK_NOT_FOUND = "Book not found with id: ";
+
     @GetMapping
-    public List<Book> getAllBooks() {
+    public ResponseEntity<List<Book>> getAllBooks() {
         try {
-            return bookService.getAllBooks();
-        } catch (Exception e) {
-            e.printStackTrace(); // Add this line for debugging
-            throw new RuntimeException("Error fetching books", e);
+            List<Book> books = bookService.getAllBooks();
+            return ResponseEntity.ok(books);
+        } catch (CustomException e) {
+            return ResponseEntity.status(500).body(null);
         }
     }
 
     @GetMapping("/{id}")
-    public Book getBookById(@PathVariable Integer id) {
-        return bookService.getBookById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+    public ResponseEntity<Book> getBookById(@PathVariable Integer id) {
+        try {
+            Book book = bookService.getBookById(id)
+                    .orElseThrow(() -> new CustomException(BOOK_NOT_FOUND + id));
+            return ResponseEntity.ok(book);
+        } catch (CustomException e) {
+            return ResponseEntity.status(404).body(null);
+        }
     }
 
     @PostMapping
-    public Book saveBook(@ModelAttribute BookDto bookDto) {
-        Book book = new Book();
-        book.setTitle(bookDto.getTitle());
-        book.setDesc(bookDto.getDesc());
-        book.setAuthor(bookDto.getAuthor());
-        book.setCategory(bookDto.getCategory());
-        book.setYearpublish(Integer.parseInt(bookDto.getYearPublish()));
+    public ResponseEntity<Book> saveBook(@ModelAttribute BookDto bookDto) {
+        try {
+            Book book = new Book();
+            book.setTitle(bookDto.getTitle());
+            book.setDesc(bookDto.getDesc());
+            book.setAuthor(bookDto.getAuthor());
+            book.setCategory(bookDto.getCategory());
+            book.setYearpublish(Integer.parseInt(bookDto.getYearPublish()));
 
-        MultipartFile file = bookDto.getBookImage1();
+            MultipartFile file = bookDto.getBookImage1();
 
-        System.out.println(book.getCategory());
-        System.out.println("Saving book: " + book);
-        return bookService.saveBook(book, file);
+            System.out.println(book.getCategory());
+            System.out.println("Saving book: " + book);
+            Book savedBook = bookService.saveBook(book, file);
+            return ResponseEntity.status(201).body(savedBook);
+        } catch (CustomException e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
-
 
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable Integer id) {
-        bookService.deleteBook(id);
+    public ResponseEntity<Void> deleteBook(@PathVariable Integer id) {
+        try {
+            bookService.deleteBook(id);
+            return ResponseEntity.noContent().build();
+        } catch (CustomException e) {
+            return ResponseEntity.status(500).build();
+        }
     }
+
     @GetMapping("/image/{id}")
     public ResponseEntity<Resource> getBookImage(@PathVariable Integer id) {
-        // Use the new service method to get the image resource
-        Resource resource = (Resource) bookService.getBookImage(id);
-
-        // Return the image file as a response
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG)  // Adjust the media type based on your image format
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + resource.getFilename())
-                .body(resource);
+        try {
+            Resource resource = (Resource) bookService.getBookImage(id);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + resource.getFilename())
+                    .body(resource);
+        } catch (CustomException e) {
+            return ResponseEntity.status(404).body(null);
+        }
     }
+
     @GetMapping("/available")
-    public List<Book> getAvailableBooks() {
-        // Retrieve only available books
-        return bookService.getAvailableBooks();
+    public ResponseEntity<List<Book>> getAvailableBooks() {
+        try {
+            List<Book> availableBooks = bookService.getAvailableBooks();
+            return ResponseEntity.ok(availableBooks);
+        } catch (CustomException e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 
     @GetMapping("/checked-out")
-    public List<Book> getCheckedOutBooks() {
-        // Retrieve only checked out books
-        return bookService.getCheckedOutBooks();
+    public ResponseEntity<List<Book>> getCheckedOutBooks() {
+        try {
+            List<Book> checkedOutBooks = bookService.getCheckedOutBooks();
+            return ResponseEntity.ok(checkedOutBooks);
+        } catch (CustomException e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 }

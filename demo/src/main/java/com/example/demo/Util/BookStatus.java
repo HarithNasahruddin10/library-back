@@ -1,4 +1,4 @@
-package com.example.demo.Utility;
+package com.example.demo.Util;
 
 public enum BookStatus {
     AVAILABLE, CHECKED_OUT

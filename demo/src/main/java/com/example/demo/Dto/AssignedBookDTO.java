@@ -1,7 +1,7 @@
 package com.example.demo.Dto;
 
-import com.example.demo.Utility.BookStatus;
-import com.example.demo.Utility.Category;
+import com.example.demo.Util.BookStatus;
+import com.example.demo.Util.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

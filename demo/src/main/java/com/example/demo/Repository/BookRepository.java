@@ -1,7 +1,7 @@
 package com.example.demo.Repository;
 
 import com.example.demo.Model.Book;
-import com.example.demo.Utility.BookStatus;
+import com.example.demo.Util.BookStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
